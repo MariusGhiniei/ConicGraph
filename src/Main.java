@@ -83,7 +83,7 @@ class Conic extends Frame{
             Button btn1 = new Button("idk");
             add(btn1);
             btn1.setLocation(100,100);
-            tf1.setBounds(1000,15,100,25);
+            tf1.setBounds(100,15,100,25);
 
             tf2.setBounds(120,35,100,25);
             tf3.setBounds(120,60,100,25);
