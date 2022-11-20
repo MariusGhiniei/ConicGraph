@@ -3,6 +3,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.geom.Point2D;
+import java.text.DecimalFormat;
 
 class Conic extends Frame{
     Toolkit tool;
@@ -11,7 +13,7 @@ class Conic extends Frame{
     public OutputPanel outPanel;
     public DrawPanel drawPanel;
 
-    int[] values = new int[6];
+    double[] values = new double[6];
 
     Conic(){
         tool = getToolkit();
@@ -52,7 +54,7 @@ class Conic extends Frame{
     }
 
     class InputPanel extends Panel{
-        private int a11,a12,a22,a13,a23,a33;
+
         Font f = new Font("TimesRoman",1,14);
         Font g = new Font("TimesRoman",2,13);
 
@@ -130,30 +132,37 @@ class Conic extends Frame{
             Button draw = new Button("Deseneaza");
             draw.setFont(g);
 
-            Label drawNull = new Label("");
+            Label drawNull = new Label("",Label.CENTER);
 
             add(draw); add(drawNull);
             draw.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     String error = "";
-
+                    double a11,a12,a22,a13,a23,a33;
                     try {
-                        a11 = Integer.parseInt(tf1.getText());
-                        a12 = Integer.parseInt(tf2.getText());
-                        a22 = Integer.parseInt(tf3.getText());
-                        a13 = Integer.parseInt(tf4.getText());
-                        a23 = Integer.parseInt(tf5.getText());
-                        a33 = Integer.parseInt(tf6.getText());
+                        a11 = Double.parseDouble(tf1.getText());
+                        a12 = Double.parseDouble(tf2.getText());
+                        a22 = Double.parseDouble(tf3.getText());
+                        a13 = Double.parseDouble(tf4.getText());
+                        a23 = Double.parseDouble(tf5.getText());
+                        a33 = Double.parseDouble(tf6.getText());
 
-                        values[0] = a11;
-                        values[1] = a12;
-                        values[2] = a22;
-                        values[3] = a13;
-                        values[4] = a23;
-                        values[5] = a33;
+                        double res = a11 *  a11 + a12 * a12 + a22 * a22;
 
-                        outPanel.info();
+                        if(res == 0){
+                            error = "Coeficientii introdusi nu formeaza o conica.";
+                            drawNull.setText(error);
+                        } else {
+                            values[0] = a11;
+                            values[1] = a12;
+                            values[2] = a22;
+                            values[3] = a13;
+                            values[4] = a23;
+                            values[5] = a33;
+
+                            outPanel.info();
+                        }
 
                     }
                     catch(Exception ex){
@@ -169,6 +178,7 @@ class Conic extends Frame{
     class OutputPanel extends Panel{
         Font f = new Font("TimesRoman",1,13);
         Font g = new Font("TimesRoman",3,18);
+        Font i = new Font("TimesRoman",1,9);
 
         Label delta = new Label();
         Label Delta = new Label();
@@ -224,30 +234,49 @@ class Conic extends Frame{
             add(lastRow); add(lastRow); add(lastRow); add(lastRow);
 
         }
-        private int getTrace(){
+        private double getTrace(){
             return values[0] + values[2];
         }
-        private int getDelta(){
+        private double getDelta(){
             return values[0] * values[2] - values[1] * values[1];
         }
-        private int getDet(){
+        private double getDet(){
             return values[0] * values[2] * values[5] +
                     2 * values[1] * values[4] * values[3] -
                     values[2] * values[3] * values[3] -
                     values[5] * values[1] * values[1] -
                     values[0] * values[4] * values[4];
         }
-        private int getDelta1(){
+        private double getDelta1(){
             return values[0] * values[2] - values[1] * values[1] +
                     values[0] * values[5] - values[3] * values[3] +
                     values[2] * values[5] - values[4] * values[4];
         }
+        private Point2D getCenter(){
+            double delta = getDelta();
+            double y0 = (values[1] * values[3] - values[0] * values[4]) / delta;
+            double x0 = -(values[1] * y0 + values[3])/values[0];
+
+            Point2D.Double C = new Point2D.Double(x0, y0);
+
+            return C;
+        }
         public void info(){
-            int trace = getTrace();
-            int d = getDelta();
-            int D = getDet();
-            int D1 = getDelta1();
-            int traceDeltaAD = trace * D;
+            DecimalFormat dfZero = new DecimalFormat("0.00");
+
+            double trace = getTrace();
+            double d = getDelta();
+            double D = getDet();
+            double D1 = getDelta1();
+            double traceDeltaAD = trace * D;
+            Point2D C0 = getCenter();
+            String centerText = "";
+            if(d == 0){
+                centerText = "Nu are centru unic la distanta finita";
+                center.setFont(i);
+            } else {
+                centerText = "(" + dfZero.format(C0.getX()) + " , " + dfZero.format(C0.getY()) + ")";
+            }
 
             String kindText = "";
             String typeText = "";
@@ -312,13 +341,18 @@ class Conic extends Frame{
                 }
             }
 
-            delta.setText(String.valueOf(d));
-            Delta.setText(String.valueOf(D));
-            traceDelta.setText(String.valueOf(traceDeltaAD));
-            Delta1.setText(String.valueOf(D1));
+            delta.setText(String.valueOf(dfZero.format(d)));
+            Delta.setText(String.valueOf(dfZero.format(D)));
+            traceDelta.setText(String.valueOf(dfZero.format(traceDeltaAD)));
+            Delta1.setText(String.valueOf(dfZero.format(D1)));
             kind.setText(kindText);
             type.setText(typeText);
+            if(nameText == "Drepte imaginare paralele"){
+                name.setFont(f);
+            }
             name.setText(nameText);
+            center.setText(centerText);
+
 
         }
 
