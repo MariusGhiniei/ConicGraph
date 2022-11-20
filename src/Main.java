@@ -1,6 +1,8 @@
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 class Conic extends Frame{
     Toolkit tool;
@@ -39,6 +41,11 @@ class Conic extends Frame{
         move(0,0);
         setVisible(true);
 
+        addWindowListener (new WindowAdapter() {
+            public void windowClosing (WindowEvent e) {
+                dispose();
+            }
+        });
     }
     public static void main(String args[]){
         Conic conic = new Conic();
@@ -217,30 +224,37 @@ class Conic extends Frame{
             add(lastRow); add(lastRow); add(lastRow); add(lastRow);
 
         }
-        public void info(){
-
-            int traceA = values[0] + values[2]; //a11 + a22
-
-            int deltaA = values[0] * values[2] - values[1] * values[1]; //a11*a22 - a12*a12
-
-            int DeltaD = values[0] * values[2] * values[5] +
+        private int getTrace(){
+            return values[0] + values[2];
+        }
+        private int getDelta(){
+            return values[0] * values[2] - values[1] * values[1];
+        }
+        private int getDet(){
+            return values[0] * values[2] * values[5] +
                     2 * values[1] * values[4] * values[3] -
-                        values[2] * values[3] * values[3] -
-                        values[5] * values[1] * values[1] -
-                        values[0] * values[4] * values[4]; //det(D)
-
-            int traceDeltaAD = traceA * DeltaD;
-
-            int Delta1D = values[0] * values[2] - values[1] * values[1] +
-                         values[0] * values[5] - values[3] * values[3] +
-                         values[2] * values[5] - values[4] * values[4]; //centro - ortogonal
+                    values[2] * values[3] * values[3] -
+                    values[5] * values[1] * values[1] -
+                    values[0] * values[4] * values[4];
+        }
+        private int getDelta1(){
+            return values[0] * values[2] - values[1] * values[1] +
+                    values[0] * values[5] - values[3] * values[3] +
+                    values[2] * values[5] - values[4] * values[4];
+        }
+        public void info(){
+            int trace = getTrace();
+            int d = getDelta();
+            int D = getDet();
+            int D1 = getDelta1();
+            int traceDeltaAD = trace * D;
 
             String kindText = "";
             String typeText = "";
             String nameText = "";
 
-            if(deltaA > 0) {
-                if(DeltaD != 0) {
+            if(d > 0) {
+                if(D != 0) {
                     if(traceDeltaAD < 0) {
                         kindText = "Eliptic";
                         typeText = "Nedegenerat";
@@ -253,44 +267,44 @@ class Conic extends Frame{
                     }
                 }
 
-                if(DeltaD == 0) {
+                if(D == 0) {
                         kindText = "Eliptic";
                         typeText = "Degenerat";
                         nameText = "Punct Dublu";
                 }
             }
 
-            if(deltaA < 0){
-                if(DeltaD != 0){
+            if(d < 0){
+                if(D != 0){
                         kindText = "Hiperbolic";
                         typeText = "Nedegenerat";
                         nameText = "Hiperbola";
                 }
-                if(DeltaD == 0){
+                if(D == 0){
                     kindText = "Hiperbolic";
                     typeText = "Degenerat";
                     nameText = "Drepte concurente";
                 }
             }
 
-            if(deltaA == 0){
-                if(DeltaD != 0){
+            if(d == 0){
+                if(D != 0){
                     kindText = "Parabolic";
                     typeText = "Nedegenerat";
                     nameText = "Prabola";
                 }
-                if (DeltaD == 0) {
-                    if(Delta1D < 0){
+                if (D == 0) {
+                    if(D1 < 0){
                         kindText = "Parabolic";
                         typeText = "Degenerat";
                         nameText = "Drepte Paralele";
                     }
-                    if(Delta1D == 0) {
+                    if(D1 == 0) {
                         kindText = "Parabolic";
                         typeText = "Degenerat";
                         nameText = "Dreapta Dubla";
                     }
-                    if(Delta1D > 0){
+                    if(D1 > 0){
                         kindText = "Parabolic";
                         typeText = "Degenerat";
                         nameText = "Drepte imaginare paralele";
@@ -298,10 +312,10 @@ class Conic extends Frame{
                 }
             }
 
-            delta.setText(String.valueOf(deltaA));
-            Delta.setText(String.valueOf(DeltaD));
+            delta.setText(String.valueOf(d));
+            Delta.setText(String.valueOf(D));
             traceDelta.setText(String.valueOf(traceDeltaAD));
-            Delta1.setText(String.valueOf(Delta1D));
+            Delta1.setText(String.valueOf(D1));
             kind.setText(kindText);
             type.setText(typeText);
             name.setText(nameText);
