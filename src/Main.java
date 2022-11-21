@@ -14,6 +14,7 @@ class Conic extends Frame{
     public DrawPanel drawPanel;
 
     double[] values = new double[6];
+    boolean btnPressed = false;
 
     Conic(){
         tool = getToolkit();
@@ -42,7 +43,6 @@ class Conic extends Frame{
         resize(width,height);
         move(0,0);
         setVisible(true);
-
         addWindowListener (new WindowAdapter() {
             public void windowClosing (WindowEvent e) {
                 dispose();
@@ -161,7 +161,9 @@ class Conic extends Frame{
                             values[4] = a23;
                             values[5] = a33;
 
+                            btnPressed = true;
                             outPanel.info();
+                            drawPanel.paint(getGraphics());
                         }
 
                     }
@@ -173,6 +175,33 @@ class Conic extends Frame{
                 }
             });
         }
+    }
+    private double getTrace(){
+        return values[0] + values[2];
+    }
+    private double getDelta(){
+        return values[0] * values[2] - values[1] * values[1];
+    }
+    private double getDet(){
+        return values[0] * values[2] * values[5] +
+                2 * values[1] * values[4] * values[3] -
+                values[2] * values[3] * values[3] -
+                values[5] * values[1] * values[1] -
+                values[0] * values[4] * values[4];
+    }
+    private double getDelta1(){
+        return values[0] * values[2] - values[1] * values[1] +
+                values[0] * values[5] - values[3] * values[3] +
+                values[2] * values[5] - values[4] * values[4];
+    }
+    private Point2D getCenter(){
+        double delta = getDelta();
+        double y0 = (values[1] * values[3] - values[0] * values[4]) / delta;
+        double x0 = -(values[1] * y0 + values[3])/values[0];
+
+        Point2D.Double C = new Point2D.Double(x0, y0);
+
+        return C;
     }
 
     class OutputPanel extends Panel{
@@ -234,33 +263,7 @@ class Conic extends Frame{
             add(lastRow); add(lastRow); add(lastRow); add(lastRow);
 
         }
-        private double getTrace(){
-            return values[0] + values[2];
-        }
-        private double getDelta(){
-            return values[0] * values[2] - values[1] * values[1];
-        }
-        private double getDet(){
-            return values[0] * values[2] * values[5] +
-                    2 * values[1] * values[4] * values[3] -
-                    values[2] * values[3] * values[3] -
-                    values[5] * values[1] * values[1] -
-                    values[0] * values[4] * values[4];
-        }
-        private double getDelta1(){
-            return values[0] * values[2] - values[1] * values[1] +
-                    values[0] * values[5] - values[3] * values[3] +
-                    values[2] * values[5] - values[4] * values[4];
-        }
-        private Point2D getCenter(){
-            double delta = getDelta();
-            double y0 = (values[1] * values[3] - values[0] * values[4]) / delta;
-            double x0 = -(values[1] * y0 + values[3])/values[0];
 
-            Point2D.Double C = new Point2D.Double(x0, y0);
-
-            return C;
-        }
         public void info(){
             DecimalFormat dfZero = new DecimalFormat("0.00");
 
@@ -347,14 +350,15 @@ class Conic extends Frame{
             Delta1.setText(String.valueOf(dfZero.format(D1)));
             kind.setText(kindText);
             type.setText(typeText);
+
             if(nameText == "Drepte imaginare paralele"){
                 name.setFont(f);
             }
             name.setText(nameText);
             center.setText(centerText);
 
-
         }
+
 
     }
 
@@ -367,5 +371,79 @@ class Conic extends Frame{
 
         }
 
+        public void paint(Graphics g){
+            if(btnPressed == true) {
+                super.paintComponents(g);
+
+                setBackground(Color.WHITE);
+                g.drawLine(0,100,300,400);
+
+
+                g.setColor(Color.BLACK);
+                g.drawLine(0, height / 2, height, height / 2); //OX
+                g.drawLine(width / 4, 0, width / 4, height); //OY
+
+                Point2D center = getCenter();
+
+                g.setColor(Color.BLUE);
+                g.drawLine(width / 4 + (int)center.getX(), height / 2 + (int)center.getY(),
+                        width / 4 + (int)center.getX()+1, height / 2 + (int)center.getY()+1);
+
+                //axes of symmetry
+                double m1,m2;
+                double d = Math.sqrt(values[0] * values[0] - 2 * values[0] * values[2]
+                        + values[2] * values[2]+ 4 * values[1] * values[1]);
+                m1 = (- (values[0] - values[2]) - d ) / (2 * values[1]);
+                m2 = (- (values[0] - values[2]) + d ) / (2 * values[1]);
+
+                Polygon d1 = new Polygon();
+                Polygon d2 = new Polygon();
+                for(int i = -width/2;i<width/2;i++){
+                    d1.addPoint(width / 4 + i,height / 2 + (int)(m1 * (i-center.getX()) + center.getY()));
+                    d2.addPoint(width / 4 + i,height / 2 + (int)(m2 * (i-center.getX()) + center.getY()));
+                }
+                g.setColor(Color.blue);
+                g.drawPolyline(d1.xpoints, d1.ypoints, d1.npoints);
+                g.drawPolyline(d2.xpoints, d2.ypoints, d2.npoints);
+
+
+
+            //conic
+            double delta = getDelta();
+            double Delta = getDet();
+            double I = getTrace();
+            double lambda1, lambda2;
+
+
+            double det = I * I - 4 * delta;
+            lambda1 = (I + Math.sqrt(det)) / 2;
+            lambda2 = (I - Math.sqrt(det)) / 2;
+
+            if(Delta == 0) {
+                if (lambda1 * lambda2 == delta && delta > 0) { //single point
+                    g.setColor(Color.RED);
+                    g.drawLine(width / 4 + (int) center.getX(), height / 2 + (int) center.getY(),
+                            width / 4 + (int) center.getX() + 1, height / 2 + (int) center.getY() + 1);
+                }
+            }
+                if (lambda1 == lambda2 ){
+                    g.setColor(Color.RED);
+                    double xFirst = values[3] / values[0];
+                    double yFirst = values[4] / values[0];
+                    double a33First = values[5] - (values[3] / values[0]) * (values[3] / values[0]) -
+                            (values[4] / values[0]) * (values[4] / values[0]);
+
+                    Polygon c1 = new Polygon();
+
+                    for(int i = -width/2;i<=width/2;i++){
+                        c1.addPoint(width/4 + (int)(Math.sqrt(xFirst+i)),
+                                (int) (height/2 + Math.sqrt( (-lambda1*i*i - a33First)*lambda2) - yFirst));
+                    }
+                    g.setColor(Color.RED);
+                    g.drawPolyline(c1.xpoints, c1.ypoints, c1.npoints);
+
+                }
+            }
+        }
     }
 }
